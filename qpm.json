@@ -1,0 +1,45 @@
+{
+  "sharedDir": "shared",
+  "dependenciesDir": "extern",
+  "info": {
+    "name": "MappingExtensions",
+    "id": "MappingExtensions",
+    "version": "0.20.1-unofficial",
+    "url": "https://github.com/StackDoubleFlow/QuestMods",
+    "additionalData": {}
+  },
+  "dependencies": [
+    {
+      "id": "beatsaber-hook",
+      "versionRange": "2.3.2",
+      "additionalData": {
+        "extraFiles": [
+          "src/inline-hook"
+        ]
+      }
+    },
+    {
+      "id": "libil2cpp",
+      "versionRange": "*",
+      "additionalData": {}
+    },
+    {
+      "id": "modloader",
+      "versionRange": "1.2.3",
+      "additionalData": {}
+    },
+    {
+      "id": "codegen",
+      "versionRange": "0.14.0",
+      "additionalData": {}
+    },
+    {
+      "id": "pinkcore",
+      "versionRange": "*",
+      "additionalData": {
+        "private": true
+      }
+    }
+  ],
+  "additionalData": {}
+}

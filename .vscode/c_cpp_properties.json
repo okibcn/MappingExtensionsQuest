@@ -1,0 +1,27 @@
+{
+  "configurations": [
+    {
+      "defines": [
+        "_DEBUG",
+        "UNICODE",
+        "_UNICODE",
+        "__ANDROID__",
+        "VERSION=\"0.20.0\""
+      ],
+      "includePath": [
+        "${workspaceFolder}/include",
+        "${workspaceFolder}/shared",
+        "${workspaceFolder}/extern",
+        "${workspaceFolder}/extern/libil2cpp/il2cpp/libil2cpp",
+        "${workspaceFolder}/../../../android-ndk-r22b/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include",
+        "${workspaceFolder}/../../../android-ndk-r22b/sources/cxx-stl/llvm-libc++/include",
+        "${workspaceFolder}/../../../android-ndk-r22b/sources/cxx-stl/llvm-libc++abi/include"
+      ],
+      "name": "Quest",
+      "cStandard": "gnu17",
+      "cppStandard": "gnu++20",
+      "intelliSenseMode": "clang-arm64"
+    }
+  ],
+  "version": 4
+}
