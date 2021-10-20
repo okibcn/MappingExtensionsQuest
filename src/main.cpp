@@ -3,9 +3,14 @@
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 
 #include "GlobalNamespace/BeatmapCharacteristicSO.hpp"
+#include "GlobalNamespace/BeatmapDataObstaclesMergingTransform.hpp"
+#include "GlobalNamespace/BeatmapObjectExecutionRatingsRecorder.hpp"
+#include "GlobalNamespace/BeatmapObjectSpawnController_InitData.hpp"
 #include "GlobalNamespace/BeatmapObjectSpawnMovementData.hpp"
+#include "GlobalNamespace/FlyingScoreSpawner.hpp"
 #include "GlobalNamespace/IDifficultyBeatmap.hpp"
 #include "GlobalNamespace/IDifficultyBeatmapSet.hpp"
+#include "GlobalNamespace/MainMenuViewController.hpp"
 #include "GlobalNamespace/NoteCutDirectionExtensions.hpp"
 #include "GlobalNamespace/NoteData.hpp"
 #include "GlobalNamespace/ObstacleController.hpp"
@@ -13,11 +18,6 @@
 #include "GlobalNamespace/SpawnRotationProcessor.hpp"
 #include "GlobalNamespace/StandardLevelDetailView.hpp"
 #include "GlobalNamespace/StretchableObstacle.hpp"
-#include "GlobalNamespace/FlyingScoreSpawner.hpp"
-#include "GlobalNamespace/MainMenuViewController.hpp"
-#include "GlobalNamespace/BeatmapObjectSpawnController_InitData.hpp"
-#include "GlobalNamespace/BeatmapObjectExecutionRatingsRecorder.hpp"
-#include "GlobalNamespace/BeatmapDataObstaclesMergingTransform.hpp"
 
 #include "UnityEngine/Vector2.hpp"
 #include "UnityEngine/Vector3.hpp"
@@ -86,15 +86,19 @@ float ToEffectiveIndex(int index)
     return effectiveIndex;
 }
 
-static IDifficultyBeatmap* storedDiffBeatmap = nullptr;
+static IDifficultyBeatmap* storedDiffBeatmap                  = nullptr;
 static BeatmapCharacteristicSO* storedBeatmapCharacteristicSO = nullptr;
-MAKE_HOOK_MATCH(StandardLevelDetailView_RefreshContent, &StandardLevelDetailView::RefreshContent, void, StandardLevelDetailView* self)
+
+MAKE_HOOK_MATCH(
+    StandardLevelDetailView_RefreshContent, &StandardLevelDetailView::RefreshContent, void, StandardLevelDetailView* self)
 {
     StandardLevelDetailView_RefreshContent(self);
     storedBeatmapCharacteristicSO = self->selectedDifficultyBeatmap->get_parentDifficultyBeatmapSet()->get_beatmapCharacteristic();
 }
+
 MAKE_HOOK_MATCH(MainMenuViewController_DidActivate, &MainMenuViewController::DidActivate, void, MainMenuViewController* self,
-                     bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
+    bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
+{
     storedBeatmapCharacteristicSO = nullptr;
     return MainMenuViewController_DidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
 }
@@ -112,7 +116,8 @@ MAKE_HOOK_MATCH(BeatmapObjectSpawnController_Start, &BeatmapObjectSpawnControlle
     return BeatmapObjectSpawnController_Start(self);
 }
 
-MAKE_HOOK_MATCH(BeatmapObjectExecutionRatingsRecorder_HandleObstacleDidPassAvoidedMark, &BeatmapObjectExecutionRatingsRecorder::HandleObstacleDidPassAvoidedMark, void, BeatmapObjectExecutionRatingsRecorder* self,
+MAKE_HOOK_MATCH(BeatmapObjectExecutionRatingsRecorder_HandleObstacleDidPassAvoidedMark,
+    &BeatmapObjectExecutionRatingsRecorder::HandleObstacleDidPassAvoidedMark, void, BeatmapObjectExecutionRatingsRecorder* self,
     ObstacleController* obstacleController)
 {
     if (skipWallRatings) {
@@ -124,8 +129,8 @@ MAKE_HOOK_MATCH(BeatmapObjectExecutionRatingsRecorder_HandleObstacleDidPassAvoid
 
 /* PC version hooks */
 
-MAKE_HOOK_MATCH(BeatmapObjectSpawnMovementData_GetNoteOffset, &BeatmapObjectSpawnMovementData::GetNoteOffset, UnityEngine::Vector3, BeatmapObjectSpawnMovementData* self,
-    int noteLineIndex, GlobalNamespace::NoteLineLayer noteLineLayer)
+MAKE_HOOK_MATCH(BeatmapObjectSpawnMovementData_GetNoteOffset, &BeatmapObjectSpawnMovementData::GetNoteOffset, UnityEngine::Vector3,
+    BeatmapObjectSpawnMovementData* self, int noteLineIndex, GlobalNamespace::NoteLineLayer noteLineLayer)
 {
     if (noteLineIndex == 4839) {
         logger().info("lineIndex %i and lineLayer %i!", noteLineIndex, noteLineLayer.value);
@@ -145,7 +150,8 @@ MAKE_HOOK_MATCH(BeatmapObjectSpawnMovementData_GetNoteOffset, &BeatmapObjectSpaw
     return __result;
 }
 
-MAKE_HOOK_MATCH(BeatmapObjectSpawnMovementData_HighestJumpPosYForLineLayer, &BeatmapObjectSpawnMovementData::HighestJumpPosYForLineLayer, float, BeatmapObjectSpawnMovementData* self,
+MAKE_HOOK_MATCH(BeatmapObjectSpawnMovementData_HighestJumpPosYForLineLayer,
+    &BeatmapObjectSpawnMovementData::HighestJumpPosYForLineLayer, float, BeatmapObjectSpawnMovementData* self,
     NoteLineLayer lineLayer)
 {
     float __result = BeatmapObjectSpawnMovementData_HighestJumpPosYForLineLayer(self, lineLayer);
@@ -163,8 +169,8 @@ MAKE_HOOK_MATCH(BeatmapObjectSpawnMovementData_HighestJumpPosYForLineLayer, &Bea
     return __result;
 }
 
-MAKE_HOOK_MATCH(BeatmapObjectSpawnMovementData_LineYPosForLineLayer, &BeatmapObjectSpawnMovementData::LineYPosForLineLayer, float, BeatmapObjectSpawnMovementData* self,
-    NoteLineLayer lineLayer)
+MAKE_HOOK_MATCH(BeatmapObjectSpawnMovementData_LineYPosForLineLayer, &BeatmapObjectSpawnMovementData::LineYPosForLineLayer, float,
+    BeatmapObjectSpawnMovementData* self, NoteLineLayer lineLayer)
 {
     float __result = BeatmapObjectSpawnMovementData_LineYPosForLineLayer(self, lineLayer);
     // if (!Plugin.active) return __result;
@@ -181,8 +187,8 @@ MAKE_HOOK_MATCH(BeatmapObjectSpawnMovementData_LineYPosForLineLayer, &BeatmapObj
     return __result;
 }
 
-MAKE_HOOK_MATCH(BeatmapObjectSpawnMovementData_Get2DNoteOffset, &BeatmapObjectSpawnMovementData::Get2DNoteOffset, UnityEngine::Vector2, BeatmapObjectSpawnMovementData* self,
-    int noteLineIndex, GlobalNamespace::NoteLineLayer noteLineLayer)
+MAKE_HOOK_MATCH(BeatmapObjectSpawnMovementData_Get2DNoteOffset, &BeatmapObjectSpawnMovementData::Get2DNoteOffset,
+    UnityEngine::Vector2, BeatmapObjectSpawnMovementData* self, int noteLineIndex, GlobalNamespace::NoteLineLayer noteLineLayer)
 {
     if (noteLineIndex == 4839) {
         logger().info("lineIndex %i and lineLayer %i!", noteLineIndex, noteLineLayer.value);
@@ -193,27 +199,29 @@ MAKE_HOOK_MATCH(BeatmapObjectSpawnMovementData_Get2DNoteOffset, &BeatmapObjectSp
         if (noteLineIndex <= -1000)
             noteLineIndex += 2000;
         float num = -(self->noteLinesCount - 1.0f) * 0.5f;
-        float x = num + ((float)noteLineIndex * self->noteLinesDistance / 1000.0f);
-        float y = self->LineYPosForLineLayer(noteLineLayer);
-        __result = UnityEngine::Vector2(x, y);
+        float x   = num + ((float)noteLineIndex * self->noteLinesDistance / 1000.0f);
+        float y   = self->LineYPosForLineLayer(noteLineLayer);
+        __result  = UnityEngine::Vector2(x, y);
     }
     return __result;
 }
 
-MAKE_HOOK_MATCH(FlyingScoreSpawner_SpawnFlyingScore, &FlyingScoreSpawner::SpawnFlyingScore, void, FlyingScoreSpawner* self, ByRef<GlobalNamespace::NoteCutInfo> noteCutInfo, int noteLineIndex,
-    int multiplier, UnityEngine::Vector3 pos, UnityEngine::Quaternion rotation, UnityEngine::Quaternion inverseRotation,
-    UnityEngine::Color color)
+MAKE_HOOK_MATCH(FlyingScoreSpawner_SpawnFlyingScore, &FlyingScoreSpawner::SpawnFlyingScore, void, FlyingScoreSpawner* self,
+    ByRef<GlobalNamespace::NoteCutInfo> noteCutInfo, int noteLineIndex, int multiplier, UnityEngine::Vector3 pos,
+    UnityEngine::Quaternion rotation, UnityEngine::Quaternion inverseRotation, UnityEngine::Color color)
 {
     // if (!Plugin.active) {
-        if (noteLineIndex < 0)
-            noteLineIndex = 0;
-        if (noteLineIndex > 3)
-            noteLineIndex = 3;
+    if (noteLineIndex < 0)
+        noteLineIndex = 0;
+    if (noteLineIndex > 3)
+        noteLineIndex = 3;
     // }
-    return FlyingScoreSpawner_SpawnFlyingScore(self, noteCutInfo, noteLineIndex, multiplier, pos, rotation, inverseRotation, color);
+    return FlyingScoreSpawner_SpawnFlyingScore(
+        self, noteCutInfo, noteLineIndex, multiplier, pos, rotation, inverseRotation, color);
 }
 
-MAKE_HOOK_MATCH(NoteCutDirectionExtensions_RotationAngle, &NoteCutDirectionExtensions::RotationAngle, float, NoteCutDirection cutDirection)
+MAKE_HOOK_MATCH(
+    NoteCutDirectionExtensions_RotationAngle, &NoteCutDirectionExtensions::RotationAngle, float, NoteCutDirection cutDirection)
 {
     float __result = NoteCutDirectionExtensions_RotationAngle(cutDirection);
     // if (!Plugin.active) return __result;
@@ -224,18 +232,17 @@ MAKE_HOOK_MATCH(NoteCutDirectionExtensions_RotationAngle, &NoteCutDirectionExten
     }
     return __result;
 }
-MAKE_HOOK_MATCH(NoteCutDirectionExtensions_Direction, &NoteCutDirectionExtensions::Direction, UnityEngine::Vector2, NoteCutDirection cutDirection)
+MAKE_HOOK_MATCH(NoteCutDirectionExtensions_Direction, &NoteCutDirectionExtensions::Direction, UnityEngine::Vector2,
+    NoteCutDirection cutDirection)
 {
     UnityEngine::Vector2 __result = NoteCutDirectionExtensions_Direction(cutDirection);
     // if (!Plugin.active) return __result;
-    if ((cutDirection >= 1000 && cutDirection <= 1360) ||
-        (cutDirection >= 2000 && cutDirection <= 2360))
-    {
+    if ((cutDirection >= 1000 && cutDirection <= 1360) || (cutDirection >= 2000 && cutDirection <= 2360)) {
         // uses RotationAngle hook indirectly
-        auto quaternion = NoteCutDirectionExtensions::Rotation(cutDirection, 0.0f);
-        static auto forward = UnityEngine::Vector3::get_forward();
+        auto quaternion          = NoteCutDirectionExtensions::Rotation(cutDirection, 0.0f);
+        static auto forward      = UnityEngine::Vector3::get_forward();
         UnityEngine::Vector3 dir = quaternion * forward;
-        __result = UnityEngine::Vector2(dir.x, dir.y);
+        __result                 = UnityEngine::Vector2(dir.x, dir.y);
         // logger().debug("NoteCutDirectionExtensions: {%f, %f}", dir.x, dir.y);
     }
     return __result;
@@ -255,9 +262,9 @@ bool MirrorPrecisionLineIndex(int& lineIndex, int lineCount)
     return false;
 }
 
-MAKE_HOOK_MATCH(ObstacleController_Init, &ObstacleController::Init, void, ObstacleController* self, ObstacleData* obstacleData, float worldRotation,
-    UnityEngine::Vector3 startPos, UnityEngine::Vector3 midPos, UnityEngine::Vector3 endPos, float move1Duration,
-    float move2Duration, float singleLineWidth, float height)
+MAKE_HOOK_MATCH(ObstacleController_Init, &ObstacleController::Init, void, ObstacleController* self, ObstacleData* obstacleData,
+    float worldRotation, UnityEngine::Vector3 startPos, UnityEngine::Vector3 midPos, UnityEngine::Vector3 endPos,
+    float move1Duration, float move2Duration, float singleLineWidth, float height)
 {
     ObstacleController_Init(
         self, obstacleData, worldRotation, startPos, midPos, endPos, move1Duration, move2Duration, singleLineWidth, height);
@@ -273,7 +280,7 @@ MAKE_HOOK_MATCH(ObstacleController_Init, &ObstacleController::Init, void, Obstac
     if (mode == 1) {
         int value = obstacleData->obstacleType.value;
         value -= 4001;
-        obsHeight = value / 1000;
+        obsHeight   = value / 1000;
         startHeight = value % 1000;
     } else {
         int value = obstacleData->obstacleType.value;
@@ -308,13 +315,13 @@ MAKE_HOOK_MATCH(ObstacleController_Init, &ObstacleController::Init, void, Obstac
 
 MAKE_HOOK_MATCH(NoteCutDirection_Mirror, &NoteData::Mirror, void, NoteData* self, int lineCount)
 {
-    logger().debug("Mirroring note with time: %f, lineIndex: %i, lineLayer: %i, cutDirection: %i",
-            self->time, self->lineIndex, (int)(self->noteLineLayer), (int)(self->cutDirection));
+    logger().debug("Mirroring note with time: %f, lineIndex: %i, lineLayer: %i, cutDirection: %i", self->time, self->lineIndex,
+        (int)(self->noteLineLayer), (int)(self->cutDirection));
 
     int lineIndex     = self->lineIndex;
     int flipLineIndex = self->flipLineIndex;
     NoteCutDirection_Mirror(self, lineCount);
-  // if (!Plugin.active) return;
+    // if (!Plugin.active) return;
     if (MirrorPrecisionLineIndex(lineIndex, lineCount)) {
         self->lineIndex = lineIndex;
     }
@@ -323,18 +330,16 @@ MAKE_HOOK_MATCH(NoteCutDirection_Mirror, &NoteData::Mirror, void, NoteData* self
     }
 }
 
-
-//MAKE_HOOK_MATCH(NoteData_MirrorTransformCutDirection, &NoteData::cutDirection, void, NoteData* self)
+// MAKE_HOOK_MATCH(NoteData_MirrorTransformCutDirection, &NoteData::cutDirection, void, NoteData* self)
 MAKE_HOOK_MATCH(NoteCutDirection_MirrorTransformCutDirection, &NoteData::Mirror, void, NoteData* self, int linecount)
 {
     int state = self->cutDirection.value;
-    NoteCutDirection_MirrorTransformCutDirection(self,linecount);
+    NoteCutDirection_MirrorTransformCutDirection(self, linecount);
     if (state >= 1000) {
         int newdir         = 2360 - state;
         self->cutDirection = newdir;
     }
 }
-
 
 MAKE_HOOK_MATCH(ObstacleData_Mirror, &ObstacleData::Mirror, void, ObstacleData* self, int lineCount)
 {
@@ -358,11 +363,13 @@ MAKE_HOOK_MATCH(ObstacleData_Mirror, &ObstacleData::Mirror, void, ObstacleData* 
     }
 }
 
-MAKE_HOOK_MATCH(SpawnRotationProcessor_RotationForEventValue, &SpawnRotationProcessor::RotationForEventValue, float, SpawnRotationProcessor* self, int index)
+MAKE_HOOK_MATCH(SpawnRotationProcessor_RotationForEventValue, &SpawnRotationProcessor::RotationForEventValue, float,
+    SpawnRotationProcessor* self, int index)
 {
     float __result = SpawnRotationProcessor_RotationForEventValue(self, index);
     // if (!Plugin.active) return __result;
-    if (!storedBeatmapCharacteristicSO->requires360Movement) return __result;
+    if (!storedBeatmapCharacteristicSO->requires360Movement)
+        return __result;
     if (index >= 1000 && index <= 1720)
         __result = index - 1360;
     return __result;
@@ -370,11 +377,11 @@ MAKE_HOOK_MATCH(SpawnRotationProcessor_RotationForEventValue, &SpawnRotationProc
 
 /* End of PC version hooks */
 
-MAKE_HOOK_MATCH(BeatmapDataObstaclesMergingTransform_CreateTransformedData, &BeatmapDataObstaclesMergingTransform::CreateTransformedData, IReadonlyBeatmapData *, IReadonlyBeatmapData *beatmapData) {
+MAKE_HOOK_MATCH(BeatmapDataObstaclesMergingTransform_CreateTransformedData,
+    &BeatmapDataObstaclesMergingTransform::CreateTransformedData, IReadonlyBeatmapData*, IReadonlyBeatmapData* beatmapData)
+{
     return beatmapData;
 }
-
-
 
 extern "C" void load()
 {
@@ -412,4 +419,5 @@ extern "C" void load()
 
     // Register Requirement for playing ME maps
     PinkCore::RequirementAPI::RegisterInstalled("Mapping Extensions");
+    // PinkCore::RequirementAPI::RegisterInstalled("Noodle Extensions");  // DON'T EVEN THINK ABOUT IT!!!!
 }
