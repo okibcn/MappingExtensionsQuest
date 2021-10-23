@@ -7,6 +7,8 @@ Mapping Extensions adds a host of new things you can do with your maps as a mapp
 
 This mod was originally created by [Kyle 1413](https://github.com/Kylemc1413/MappingExtensions) and previously maintained by Micheal Zoller, now maintained by [StackDoubleFlow for Quest](https://github.com/StackDoubleFlow/QuestMods/tree/master/MappingExtensions). 
 
+**This is a one-off adaptation of Mapping Extensions for Beat Saber Quest, not related to the official project by eny means. I am not part of Beat Saber Modding Group (BSMG) by any means. The original code has been slightly modified to work in the legacy version of Beat Saber v1.17.1.**
+
 
 
 ## Settings
