@@ -1,12 +1,12 @@
 /*
 
-███╗   ███╗ █████╗ ██████╗ ██████╗ ██╗███╗   ██╗ ██████╗                         
-████╗ ████║██╔══██╗██╔══██╗██╔══██╗██║████╗  ██║██╔════╝                         
-██╔████╔██║███████║██████╔╝██████╔╝██║██╔██╗ ██║██║  ███╗                        
-██║╚██╔╝██║██╔══██║██╔═══╝ ██╔═══╝ ██║██║╚██╗██║██║   ██║                        
-██║ ╚═╝ ██║██║  ██║██║     ██║     ██║██║ ╚████║╚██████╔╝                        
-╚═╝     ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝     ╚═╝╚═╝  ╚═══╝ ╚═════╝                         
-                                                                                 
+███╗   ███╗ █████╗ ██████╗ ██████╗ ██╗███╗   ██╗ ██████╗
+████╗ ████║██╔══██╗██╔══██╗██╔══██╗██║████╗  ██║██╔════╝
+██╔████╔██║███████║██████╔╝██████╔╝██║██╔██╗ ██║██║  ███╗
+██║╚██╔╝██║██╔══██║██╔═══╝ ██╔═══╝ ██║██║╚██╗██║██║   ██║
+██║ ╚═╝ ██║██║  ██║██║     ██║     ██║██║ ╚████║╚██████╔╝
+╚═╝     ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝     ╚═╝╚═╝  ╚═══╝ ╚═════╝
+
 ███████╗██╗  ██╗████████╗███████╗███╗   ██╗███████╗██╗ ██████╗ ███╗   ██╗███████╗
 ██╔════╝╚██╗██╔╝╚══██╔══╝██╔════╝████╗  ██║██╔════╝██║██╔═══██╗████╗  ██║██╔════╝
 █████╗   ╚███╔╝    ██║   █████╗  ██╔██╗ ██║███████╗██║██║   ██║██╔██╗ ██║███████╗
@@ -61,49 +61,33 @@ extern "C" void setup(ModInfo& info)
     logger().info("Leaving setup!");
 }
 
-[[maybe_unused]] static void dump_real(int before, int after, void* ptr)
-{
-    logger().info("Dumping Immediate Pointer: %p: %lx", ptr, *reinterpret_cast<long*>(ptr));
-    auto begin = static_cast<long*>(ptr) - before;
-    auto end   = static_cast<long*>(ptr) + after;
-    for (auto cur = begin; cur != end; ++cur) {
-        logger().info("0x%lx: %lx", (long)cur - (long)ptr, *cur);
-    }
-}
-
 // Normalized indices are faster to compute & reverse, and more accurate than, effective indices (see below).
 // A "normalized" precision index is an effective index * 1000. So unlike normal precision indices, only 0 is 0.
 int ToNormalizedPrecisionIndex(int index)
 {
     if (index <= -1000) {
         return index + 1000;
-    } else if (index >= 1000) {
-        return index - 1000;
     } else {
-        return index * 1000; // wasn't precision yet
+        return ((index >= 1000) ? (index - 1000) : index * 1000);
     }
 }
 int FromNormalizedPrecisionIndex(int index)
 {
     if (index % 1000 == 0) {
         return index / 1000;
-    } else if (index > 0) {
-        return index + 1000;
     } else {
-        return index - 1000;
+        return ((index > 0) ? (index + 1000) : (index - 1000));
     }
 }
 
 // An effective index is a normal/extended index, but with decimal places that do what you'd expect.
 float ToEffectiveIndex(int index)
 {
-    float effectiveIndex = index;
-    if (effectiveIndex <= -1000) {
-        effectiveIndex = effectiveIndex / 1000.0f + 1.0f;
-    } else if (effectiveIndex >= 1000) {
-        effectiveIndex = effectiveIndex / 1000.0f - 1.0f;
+    if (index <= -1000) {
+        return index / 1000.0f + 1.0f;
+    } else {
+        return ((index >= 1000) ? (index / 1000.0f - 1.0f) : index);
     }
-    return effectiveIndex;
 }
 
 static IDifficultyBeatmap* storedDiffBeatmap                  = nullptr;
@@ -387,12 +371,7 @@ MAKE_HOOK_MATCH(SpawnRotationProcessor_RotationForEventValue, &SpawnRotationProc
     SpawnRotationProcessor* self, int index)
 {
     float __result = SpawnRotationProcessor_RotationForEventValue(self, index);
-    // if (!Plugin.active) return __result;
-    if (!storedBeatmapCharacteristicSO->requires360Movement)
-        return __result;
-    if (index >= 1000 && index <= 1720)
-        __result = index - 1360;
-    return __result;
+    return (storedBeatmapCharacteristicSO->requires360Movement && (index >= 1000)) ? index - 1360.0f : __result;
 }
 
 /* End of PC version hooks */
