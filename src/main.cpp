@@ -106,11 +106,10 @@ MAKE_HOOK_MATCH(MainMenuViewController_DidActivate, &MainMenuViewController::Did
     return MainMenuViewController_DidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
 }
 
-static bool                skipWallRatings   = false;
+static bool skipWallRatings = false;
 MAKE_HOOK_MATCH(BeatmapObjectSpawnController_Start, &BeatmapObjectSpawnController::Start, void, BeatmapObjectSpawnController* self)
 {
     skipWallRatings = false;
-
     return BeatmapObjectSpawnController_Start(self);
 }
 
@@ -397,6 +396,7 @@ extern "C" void load()
 
     // Skip pepega merging
     INSTALL_HOOK(hookLogger, BeatmapDataObstaclesMergingTransform_CreateTransformedData);
+
 
     logger().info("Installed MappingExtensions Hooks!");
 
