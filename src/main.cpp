@@ -90,7 +90,6 @@ float ToEffectiveIndex(int index)
     }
 }
 
-static IDifficultyBeatmap* storedDiffBeatmap                  = nullptr;
 static BeatmapCharacteristicSO* storedBeatmapCharacteristicSO = nullptr;
 
 MAKE_HOOK_MATCH(
@@ -107,14 +106,9 @@ MAKE_HOOK_MATCH(MainMenuViewController_DidActivate, &MainMenuViewController::Did
     return MainMenuViewController_DidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
 }
 
-static bool skipWallRatings = false;
+static bool                skipWallRatings   = false;
 MAKE_HOOK_MATCH(BeatmapObjectSpawnController_Start, &BeatmapObjectSpawnController::Start, void, BeatmapObjectSpawnController* self)
 {
-    if (storedDiffBeatmap) {
-        float njs = storedDiffBeatmap->get_noteJumpMovementSpeed();
-        if (njs < 0)
-            self->initData->noteJumpMovementSpeed = njs;
-    }
     skipWallRatings = false;
 
     return BeatmapObjectSpawnController_Start(self);
@@ -159,7 +153,6 @@ MAKE_HOOK_MATCH(BeatmapObjectSpawnMovementData_HighestJumpPosYForLineLayer,
     NoteLineLayer lineLayer)
 {
     float __result = BeatmapObjectSpawnMovementData_HighestJumpPosYForLineLayer(self, lineLayer);
-    // if (!Plugin.active) return __result;
     float delta = (self->topLinesHighestJumpPosY - self->upperLinesHighestJumpPosY);
 
     if (lineLayer >= 1000 || lineLayer <= -1000) {
@@ -177,7 +170,6 @@ MAKE_HOOK_MATCH(BeatmapObjectSpawnMovementData_LineYPosForLineLayer, &BeatmapObj
     BeatmapObjectSpawnMovementData* self, NoteLineLayer lineLayer)
 {
     float __result = BeatmapObjectSpawnMovementData_LineYPosForLineLayer(self, lineLayer);
-    // if (!Plugin.active) return __result;
     float delta = (self->topLinesYPos - self->upperLinesYPos);
 
     if (lineLayer >= 1000 || lineLayer <= -1000) {
@@ -198,7 +190,6 @@ MAKE_HOOK_MATCH(BeatmapObjectSpawnMovementData_Get2DNoteOffset, &BeatmapObjectSp
         logger().info("lineIndex %i and lineLayer %i!", noteLineIndex, noteLineLayer.value);
     }
     auto __result = BeatmapObjectSpawnMovementData_Get2DNoteOffset(self, noteLineIndex, noteLineLayer);
-    // if (!Plugin.active) return __result;
     if (noteLineIndex >= 1000 || noteLineIndex <= -1000) {
         if (noteLineIndex <= -1000)
             noteLineIndex += 2000;
@@ -214,12 +205,10 @@ MAKE_HOOK_MATCH(FlyingScoreSpawner_SpawnFlyingScore, &FlyingScoreSpawner::SpawnF
     ByRef<GlobalNamespace::NoteCutInfo> noteCutInfo, int noteLineIndex, int multiplier, UnityEngine::Vector3 pos,
     UnityEngine::Quaternion rotation, UnityEngine::Quaternion inverseRotation, UnityEngine::Color color)
 {
-    // if (!Plugin.active) {
     if (noteLineIndex < 0)
         noteLineIndex = 0;
     if (noteLineIndex > 3)
         noteLineIndex = 3;
-    // }
     return FlyingScoreSpawner_SpawnFlyingScore(
         self, noteCutInfo, noteLineIndex, multiplier, pos, rotation, inverseRotation, color);
 }
@@ -228,7 +217,6 @@ MAKE_HOOK_MATCH(
     NoteCutDirectionExtensions_RotationAngle, &NoteCutDirectionExtensions::RotationAngle, float, NoteCutDirection cutDirection)
 {
     float __result = NoteCutDirectionExtensions_RotationAngle(cutDirection);
-    // if (!Plugin.active) return __result;
     if (cutDirection >= 1000 && cutDirection <= 1360) {
         __result = 1000 - cutDirection;
     } else if (cutDirection >= 2000 && cutDirection <= 2360) {
@@ -240,7 +228,6 @@ MAKE_HOOK_MATCH(NoteCutDirectionExtensions_Direction, &NoteCutDirectionExtension
     NoteCutDirection cutDirection)
 {
     UnityEngine::Vector2 __result = NoteCutDirectionExtensions_Direction(cutDirection);
-    // if (!Plugin.active) return __result;
     if ((cutDirection >= 1000 && cutDirection <= 1360) || (cutDirection >= 2000 && cutDirection <= 2360)) {
         // uses RotationAngle hook indirectly
         auto quaternion          = NoteCutDirectionExtensions::Rotation(cutDirection, 0.0f);
@@ -272,8 +259,7 @@ MAKE_HOOK_MATCH(ObstacleController_Init, &ObstacleController::Init, void, Obstac
 {
     ObstacleController_Init(
         self, obstacleData, worldRotation, startPos, midPos, endPos, move1Duration, move2Duration, singleLineWidth, height);
-    // if (!Plugin.active) return;
-    if ((obstacleData->obstacleType.value < 1000) && !(obstacleData->width >= 1000))
+    if ((obstacleData->obstacleType.value < 1000) && (obstacleData->width < 1000))
         return;
     // Either wall height or wall width are precision
 
@@ -350,10 +336,8 @@ MAKE_HOOK_MATCH(ObstacleData_Mirror, &ObstacleData::Mirror, void, ObstacleData* 
     int __state         = self->lineIndex;
     bool precisionWidth = (self->width >= 1000);
     ObstacleData_Mirror(self, lineCount);
-    // if (!Plugin.active) return;
 
     logger().debug("lineCount: %i", lineCount);
-    //   Console.WriteLine("Width: " + __instance.width);
     if (__state >= 1000 || __state <= -1000 || precisionWidth) {
         int normIndex = ToNormalizedPrecisionIndex(__state);
         int normWidth = ToNormalizedPrecisionIndex(self->width);
