@@ -138,11 +138,11 @@ MAKE_HOOK_MATCH(BeatmapObjectSpawnMovementData_GetNoteOffset, &BeatmapObjectSpaw
     if (noteLineIndex >= 1000 || noteLineIndex <= -1000) {
         if (noteLineIndex <= -1000)
             noteLineIndex += 2000;
-        float num = -(self->noteLinesCount - 1.0f) * 0.5f;
-        num += ((float)noteLineIndex * self->noteLinesDistance / 1000.0f);
+        float xPos = -(self->noteLinesCount - 1.0f) * 0.5f;
+        xPos += ((float)noteLineIndex * self->noteLinesDistance / 1000.0f);
 
         float yPos = self->LineYPosForLineLayer(noteLineLayer);
-        __result   = UnityEngine::Vector3(num, yPos, 0.0f);
+        __result   = UnityEngine::Vector3(xPos, yPos, 0.0f);
     }
     return __result;
 }
@@ -192,8 +192,8 @@ MAKE_HOOK_MATCH(BeatmapObjectSpawnMovementData_Get2DNoteOffset, &BeatmapObjectSp
     if (noteLineIndex >= 1000 || noteLineIndex <= -1000) {
         if (noteLineIndex <= -1000)
             noteLineIndex += 2000;
-        float num = -(self->noteLinesCount - 1.0f) * 0.5f;
-        float x   = num + ((float)noteLineIndex * self->noteLinesDistance / 1000.0f);
+        float x   = -(self->noteLinesCount - 1.0f) * 0.5f;
+        x        += ((float)noteLineIndex * self->noteLinesDistance / 1000.0f);
         float y   = self->LineYPosForLineLayer(noteLineLayer);
         __result  = UnityEngine::Vector2(x, y);
     }
@@ -258,49 +258,47 @@ MAKE_HOOK_MATCH(ObstacleController_Init, &ObstacleController::Init, void, Obstac
 {
     ObstacleController_Init(
         self, obstacleData, worldRotation, startPos, midPos, endPos, move1Duration, move2Duration, singleLineWidth, height);
-    if ((obstacleData->obstacleType.value < 1000) && (obstacleData->width < 1000))
+
+    int width = obstacleData->width;
+    int value = obstacleData->obstacleType.value;
+    if ((value < 1000) && (width < 1000))
         return;
-    // Either wall height or wall width are precision
-
+    
+    // From here on either obstacle height, start, or width are precision at this point
     skipWallRatings = true;
-    int mode        = (obstacleData->obstacleType.value >= 4001 && obstacleData->obstacleType.value <= 4100000) ? 1 : 0;
-    int obsHeight;
-    int startHeight = 0;
-    if (mode == 1) {
-        int value = obstacleData->obstacleType.value;
-        value -= 4001;
-        obsHeight   = value / 1000;
-        startHeight = value % 1000;
-    } else {
-        int value = obstacleData->obstacleType.value;
-        obsHeight = value - 1000; // won't be used unless height is precision
-    }
+    bool preciseWidth = (width >= 1000);
+    bool preciseHeight = (value >= 1000);
+    bool preciseHeightStart = (value >= 4001 && value <= 4100000);
 
-    float num = (float)obstacleData->width * singleLineWidth;
-    if ((obstacleData->width >= 1000) || (mode == 1)) {
-        if (obstacleData->width >= 1000) {
-            float width              = (float)obstacleData->width - 1000.0f;
-            float precisionLineWidth = singleLineWidth / 1000.0f;
-            num                      = width * precisionLineWidth;
-        }
+    // unpacks obstacle width 
+    float obsWidth = (preciseWidth) ? ((float)(width - 1000) / 1000.0f)  : 
+                                      ((float)width);
+    obsWidth *= singleLineWidth;
+
+    // calculates obstacle lenght
+    float obsLength  = UnityEngine::Vector3::Distance(self->endPos, self->midPos) * (obstacleData->duration / move2Duration);
+    
+    //Unpacks obstacle Start and move the start position vector
+    int startHeight = (preciseHeightStart) ? ((value-4001) % 1000) : 0;
+    if (preciseWidth || preciseHeightStart) {
         // Change y of b for start height
-        UnityEngine::Vector3 b { b.x = (num - singleLineWidth) * 0.5f, b.y = 4 * ((float)startHeight / 1000), b.z = 0 };
-
+        UnityEngine::Vector3 b { b.x = (obsWidth - singleLineWidth) * 0.5f, b.y = (float)(startHeight << 2) / 1000.0f, b.z = 0.0f };
         self->startPos = startPos + b;
         self->midPos   = midPos + b;
         self->endPos   = endPos + b;
     }
 
-    float num2       = UnityEngine::Vector3::Distance(self->endPos, self->midPos) / move2Duration;
-    float length     = num2 * obstacleData->duration;
-    float multiplier = 1;
-    if (obstacleData->obstacleType.value >= 1000) {
-        multiplier = (float)obsHeight / 1000;
-    }
+    //Unpacks obstacle Height Multiplier
+    int obsHeight = (preciseHeightStart) ? ((value-4001) / 1000)                  // Precise Height and Start mode
+                                         : value - 1000;
+    float heightMultiplier = (preciseHeight) ? (float)obsHeight / 1000 : 1.0f;
 
-    self->stretchableObstacle->SetSizeAndColor((num * 0.98f), (height * multiplier), length, self->color);
+    obsWidth *= 0.98f;
+    self->stretchableObstacle->SetSizeAndColor(obsWidth, (height * heightMultiplier), obsLength, self->color);
     self->bounds = self->stretchableObstacle->bounds;
 }
+
+
 
 MAKE_HOOK_MATCH(NoteCutDirection_Mirror, &NoteData::Mirror, void, NoteData* self, int lineCount)
 {
@@ -310,13 +308,10 @@ MAKE_HOOK_MATCH(NoteCutDirection_Mirror, &NoteData::Mirror, void, NoteData* self
     int lineIndex     = self->lineIndex;
     int flipLineIndex = self->flipLineIndex;
     NoteCutDirection_Mirror(self, lineCount);
-    // if (!Plugin.active) return;
-    if (MirrorPrecisionLineIndex(lineIndex, lineCount)) {
+    if (MirrorPrecisionLineIndex(lineIndex, lineCount))
         self->lineIndex = lineIndex;
-    }
-    if (MirrorPrecisionLineIndex(flipLineIndex, lineCount)) {
+    if (MirrorPrecisionLineIndex(flipLineIndex, lineCount))
         self->flipLineIndex = flipLineIndex;
-    }
 }
 
 // MAKE_HOOK_MATCH(NoteData_MirrorTransformCutDirection, &NoteData::cutDirection, void, NoteData* self)
@@ -390,7 +385,7 @@ extern "C" void load()
     INSTALL_HOOK(hookLogger, ObstacleData_Mirror);
     INSTALL_HOOK(hookLogger, SpawnRotationProcessor_RotationForEventValue);
 
-    // ???
+    // Avoids wall penalty for artistic obstacles
     INSTALL_HOOK(hookLogger, BeatmapObjectSpawnController_Start);
     INSTALL_HOOK(hookLogger, BeatmapObjectExecutionRatingsRecorder_HandleObstacleDidPassAvoidedMark);
 
