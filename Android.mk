@@ -62,6 +62,6 @@ LOCAL_SHARED_LIBRARIES += codegen
 LOCAL_SHARED_LIBRARIES += pinkcore
 LOCAL_SHARED_LIBRARIES += custom-types
 LOCAL_LDLIBS += -llog
-LOCAL_CFLAGS += -isystem'extern' -isystem'extern/libil2cpp/il2cpp/libil2cpp' -isystem"./extern/codegen/include" -Wall -Wextra -DVERSION='"0.20.1-unofficial"'
+LOCAL_CFLAGS += -isystem'extern' -isystem'extern/libil2cpp/il2cpp/libil2cpp' -isystem"./extern/codegen/include" -Wall -Wextra -DVERSION='"1.17.1-unofficial11030"'
 LOCAL_C_INCLUDES += ./include
 include $(BUILD_SHARED_LIBRARY)

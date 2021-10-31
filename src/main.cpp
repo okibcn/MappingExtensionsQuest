@@ -38,13 +38,13 @@ Apocrypha version of the official version by Mioki
 #include "GlobalNamespace/SpawnRotationProcessor.hpp"
 #include "GlobalNamespace/StandardLevelDetailView.hpp"
 #include "GlobalNamespace/StretchableObstacle.hpp"
+using namespace GlobalNamespace;
 
 #include "UnityEngine/Vector2.hpp"
 #include "UnityEngine/Vector3.hpp"
 
 #include "pinkcore/shared/RequirementAPI.hpp"
 
-using namespace GlobalNamespace;
 
 ModInfo modInfo;
 Logger& logger()
@@ -261,10 +261,9 @@ MAKE_HOOK_MATCH(ObstacleController_Init, &ObstacleController::Init, void, Obstac
 
     int width = obstacleData->width;
     int value = obstacleData->obstacleType.value;
-    if ((value < 1000) && (width < 1000))
+    if ((value < 1000) && (width < 1000))   // finish if no custom obstacle
         return;
-    
-    // From here on either obstacle height, start, or width are precision at this point
+    // obstacle height, start, or width are precision at this point
     skipWallRatings = true;
     bool preciseWidth = (width >= 1000);
     bool preciseHeight = (value >= 1000);

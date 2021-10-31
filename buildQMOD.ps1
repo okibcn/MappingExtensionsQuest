@@ -6,7 +6,7 @@ if (-not ($PSVersionTable.PSEdition -eq "Core")) {
     $buildScript += ".cmd"
 }
 
-$ArchiveName = "mappingextensions.v0.20.1-unofficial.qmod"
+$ArchiveName = "mappingextensions.v1.17.1-unofficial11030.qmod"
 $TempArchiveName = "qmodtemp.zip"
 
 & $buildScript NDK_PROJECT_PATH=$PSScriptRoot APP_BUILD_SCRIPT=$PSScriptRoot/Android.mk NDK_APPLICATION_MK=$PSScriptRoot/Application.mk
